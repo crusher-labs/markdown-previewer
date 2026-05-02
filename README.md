@@ -24,4 +24,4 @@ A real-time, in-browser editor and previewer for Markdown syntax. Write Markdown
 ## **Live Tool**
 
 You can access the live tool here:
-👉 [**Markdown Previewer**](https://itxcrusher.github.io/markdown-previewer/)
+👉 [**Markdown Previewer**](https://crusher-labs.github.io/markdown-previewer/)
