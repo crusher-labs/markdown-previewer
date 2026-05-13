@@ -1,90 +1,121 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full" data-theme="minimal" data-theme-lock="minimal" data-mode="light">
+<html lang="en"
+      data-default-theme="minimal"
+      data-theme-lock="minimal"
+      data-default-mode="light"
+      data-default-brand="#0ea5e9">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown Previewer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
     <!-- Marked.js for Markdown to HTML conversion -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.6/dist/crusher-ui.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.6/dist/themes/minimal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.6/dist/static/tool-shell.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.6/dist/static/tool-shell.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        body { font-family: 'Inter', sans-serif; }
+
+        .md-page {
+            min-block-size: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr;
         }
-        #editor {
+        .md-shell {
+            width: min(100%, 80rem);
+            inline-size: 100%;
+            margin-inline: auto;
+            padding: var(--crusher-spacing-4);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--crusher-spacing-4);
+            min-block-size: 0;
+        }
+        @media (min-width: 768px) {
+            .md-shell { grid-template-columns: 1fr 1fr; }
+        }
+        .md-pane {
+            display: flex;
+            flex-direction: column;
+            min-block-size: 0;
+        }
+        .md-pane-label {
+            margin: 0 0 var(--crusher-spacing-2);
+            padding-inline: var(--crusher-spacing-2);
+            font-size: var(--crusher-font-size-xs);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--crusher-text-secondary);
+        }
+        #editor.crusher-tool-control {
             font-family: 'Fira Code', monospace;
+            inline-size: 100%;
+            block-size: 100%;
+            min-block-size: 22rem;
+            padding: var(--crusher-spacing-4);
+            resize: none;
+            flex: 1 1 auto;
         }
-        /* Custom styles for the preview pane */
+        #preview {
+            flex: 1 1 auto;
+            min-block-size: 22rem;
+            padding: var(--crusher-spacing-6);
+            overflow-y: auto;
+            border: 1px solid var(--crusher-border-primary);
+            border-radius: var(--crusher-radius-xl);
+            background: var(--crusher-background-surface);
+            box-shadow: var(--crusher-shadow-lg);
+        }
+
+        /* Tool-specific preview rendering — preserves rich markdown look */
         .preview-content {
-            all: revert; /* Reset styles to browser defaults */
-            color: #334155; /* slate-700 */
-            line-height: 1.6;
-        }
-        .dark .preview-content {
-            color: #cbd5e1; /* slate-300 */
+            color: var(--crusher-text-primary);
+            line-height: var(--crusher-line-height-relaxed);
         }
         .preview-content h1, .preview-content h2, .preview-content h3 {
             padding-bottom: 0.3em;
             margin-top: 24px;
             margin-bottom: 16px;
-            border-bottom: 1px solid #e2e8f0; /* slate-200 */
-        }
-        .dark .preview-content h1, .dark .preview-content h2, .dark .preview-content h3 {
-            border-bottom: 1px solid #475569; /* slate-600 */
+            border-bottom: 1px solid var(--crusher-border-primary);
+            color: var(--crusher-text-primary);
         }
         .preview-content h1 { font-size: 2em; font-weight: 600; }
         .preview-content h2 { font-size: 1.5em; font-weight: 600; }
         .preview-content h3 { font-size: 1.25em; font-weight: 600; }
         .preview-content p { margin-bottom: 16px; }
-        .preview-content a { color: #0ea5e9; /* sky-500 */ text-decoration: underline; }
-        .dark .preview-content a { color: #38bdf8; /* sky-400 */ }
+        .preview-content a { color: var(--crusher-color-brand-primary); text-decoration: underline; }
         .preview-content ul, .preview-content ol { margin-left: 20px; margin-bottom: 16px; }
         .preview-content li { margin-bottom: 4px; }
         .preview-content code {
             font-family: 'Fira Code', monospace;
-            background-color: #f1f5f9; /* slate-100 */
-            color: #1e293b; /* slate-800 */
+            background-color: var(--crusher-background-muted);
+            color: var(--crusher-text-primary);
             padding: 0.2em 0.4em;
             font-size: 85%;
-            border-radius: 6px;
-        }
-        .dark .preview-content code {
-            background-color: #334155; /* slate-700 */
-            color: #f1f5f9; /* slate-100 */
+            border-radius: var(--crusher-radius-md);
         }
         .preview-content pre {
-            background-color: #f8fafc; /* slate-50 */
+            background-color: var(--crusher-background-muted);
             padding: 16px;
-            border-radius: 8px;
+            border-radius: var(--crusher-radius-lg);
             overflow-x: auto;
-            border: 1px solid #e2e8f0; /* slate-200 */
-        }
-        .dark .preview-content pre {
-            background-color: #1e293b; /* slate-800 */
-            border: 1px solid #475569; /* slate-600 */
+            border: 1px solid var(--crusher-border-primary);
         }
         .preview-content pre code {
             background-color: transparent;
             padding: 0;
         }
         .preview-content blockquote {
-            border-left: 4px solid #cbd5e1; /* slate-300 */
+            border-left: 4px solid var(--crusher-border-primary);
             padding-left: 16px;
-            color: #64748b; /* slate-500 */
+            color: var(--crusher-text-secondary);
             margin-left: 0;
             margin-bottom: 16px;
-        }
-        .dark .preview-content blockquote {
-            border-left: 4px solid #475569; /* slate-600 */
-            color: #94a3b8; /* slate-400 */
         }
         .preview-content table {
             width: 100%;
@@ -92,141 +123,30 @@
             margin-bottom: 16px;
         }
         .preview-content th, .preview-content td {
-            border: 1px solid #cbd5e1; /* slate-300 */
+            border: 1px solid var(--crusher-border-primary);
             padding: 8px 12px;
         }
-        .dark .preview-content th, .dark .preview-content td {
-             border: 1px solid #475569; /* slate-600 */
-        }
         .preview-content th {
-            background-color: #f1f5f9; /* slate-100 */
-        }
-        .dark .preview-content th {
-            background-color: #334155; /* slate-700 */
-        }
-        #hub-bubble {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            width: 56px;
-            height: 56px;
-            background-color: #0ea5e9; /* sky-500 */
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
-        }
-        #hub-bubble:hover {
-            transform: scale(1.1);
-            background-color: #0284c7; /* sky-600 */
+            background-color: var(--crusher-background-muted);
         }
     </style>
-     <script>
-        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
-        if ((() => { try { const prefs = JSON.parse(localStorage.getItem('crusher_prefs') || '{}'); return localStorage.getItem('crusher_tools_mode_contract') === 'style-switcher-v3' && prefs.mode === 'dark'; } catch { return false; } })()) {
-          document.documentElement.classList.add('dark'); document.documentElement.setAttribute('data-mode', 'dark')
-        } else {
-          document.documentElement.classList.remove('dark'); document.documentElement.setAttribute('data-mode', 'light')
-        }
-    </script>
-    <!-- Crusher UI Kit: published static contract -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.3/dist/crusher-ui.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.3/dist/themes/minimal.css">
-    <style id="crusher-tools-framework-bridge">
-        :root {
-            --crusher-style-switcher-top: var(--crusher-spacing-6);
-            --crusher-style-switcher-width: 16.5rem;
-            --crusher-style-switcher-bg: color-mix(in srgb, var(--crusher-background-surface) 94%, transparent);
-            --crusher-style-switcher-shadow: var(--crusher-shadow-xl);
-            --crusher-style-switcher-icon-shadow: var(--crusher-shadow-md);
-            --crusher-style-switcher-color-gap: var(--crusher-spacing-2);
-            --crusher-style-switcher-color-justify: flex-start;
-        }
-        html[data-mode="dark"] { color-scheme: dark; }
-                #theme-toggle { display: none !important; }
-        body {
-            background:
-                radial-gradient(circle at top left, color-mix(in srgb, var(--crusher-color-brand-primary) 14%, transparent), transparent 28rem),
-                var(--crusher-background-canvas) !important;
-            color: var(--crusher-text-primary) !important;
-        }
-        h1, h2, h3 { color: var(--crusher-text-primary) !important; }
-        p, label, .text-slate-400, .text-slate-500, .text-slate-600, .dark\:text-slate-400, .dark\:text-slate-500 {
-            color: var(--crusher-text-secondary) !important;
-        }
-        .text-sky-400, .text-sky-500, .dark\:text-sky-400,
-        a:not(.tool-card):not(#hub-bubble) {
-            color: var(--crusher-color-brand-primary) !important;
-        }
-        .tool-card,
-        main.bg-white,
-        .bg-white,
-        .bg-slate-50,
-        .bg-slate-100,
-        .dark .dark\:bg-slate-700,
-        .dark .dark\:bg-slate-800 {
-            background-color: var(--crusher-background-surface) !important;
-            border-color: var(--crusher-border-primary) !important;
-            box-shadow: var(--crusher-shadow-lg) !important;
-        }
-        input, textarea, select,
-        .dark .dark\:bg-slate-700:is(input, textarea, select) {
-            background-color: var(--crusher-background-muted) !important;
-            color: var(--crusher-text-primary) !important;
-            border-color: var(--crusher-border-primary) !important;
-        }
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--crusher-color-brand-primary) !important;
-            box-shadow: 0 0 0 var(--crusher-focus-width) color-mix(in srgb, var(--crusher-color-brand-primary) 26%, transparent) !important;
-        }
-        button:not(#theme-toggle):not(.style-switcher-toggler):not(.day-night):not(.swatch):not(.dialect-btn),
-        .case-btn {
-            background-color: color-mix(in srgb, var(--crusher-color-brand-primary) 12%, var(--crusher-background-surface)) !important;
-            color: var(--crusher-text-primary) !important;
-            border-color: color-mix(in srgb, var(--crusher-color-brand-primary) 28%, var(--crusher-border-primary)) !important;
-        }
-        button:not(#theme-toggle):not(.style-switcher-toggler):not(.day-night):not(.swatch):not(.dialect-btn):hover,
-        .case-btn:hover,
-        .tool-card:hover {
-            background-color: color-mix(in srgb, var(--crusher-color-brand-primary) 18%, var(--crusher-background-surface)) !important;
-            border-color: var(--crusher-color-brand-primary) !important;
-        }
-        #hub-bubble {
-            background-color: var(--crusher-color-brand-primary) !important;
-            box-shadow: var(--crusher-shadow-lg) !important;
-        }
-        #hub-bubble:hover {
-            background-color: color-mix(in srgb, var(--crusher-color-brand-primary) 82%, black) !important;
-            transform: translateY(-2px) scale(1.03) !important;
-        }
-</style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-200 flex flex-col h-screen antialiased transition-colors duration-300">
-    <header class="text-center py-4 border-b border-slate-200 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 relative">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Markdown Live Previewer</h1>
-        <!-- Theme Toggle Button -->
-        <div class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6">
-            <button id="theme-toggle" type="button" title="Toggle light/dark mode" class="bg-slate-100 dark:bg-slate-700 p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
-                <svg id="theme-toggle-sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun hidden"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                <svg id="theme-toggle-moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon hidden"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-            </button>
-        </div>
+<body class="crusher-tool-page md-page">
+
+    <header class="crusher-tool-header">
+        <h1 class="crusher-tool-title">Markdown Live Previewer</h1>
+        <p class="crusher-tool-lede">Type Markdown on the left, see the rendered HTML on the right.</p>
     </header>
 
-    <main class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-hidden">
-        <!-- Editor Pane -->
-        <div class="flex flex-col h-full">
-            <label for="editor" class="text-sm font-semibold mb-2 px-2 text-slate-500 dark:text-slate-400">MARKDOWN EDITOR</label>
-            <textarea id="editor" class="w-full h-full flex-grow bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-lg p-4 border-2 border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors resize-none"></textarea>
+    <main class="md-shell">
+        <div class="md-pane">
+            <label for="editor" class="md-pane-label">Markdown Editor</label>
+            <textarea id="editor" class="crusher-tool-control"></textarea>
         </div>
 
-        <!-- Preview Pane -->
-        <div class="flex flex-col h-full">
-            <label for="preview" class="text-sm font-semibold mb-2 px-2 text-slate-500 dark:text-slate-400">LIVE PREVIEW</label>
-            <div id="preview" class="w-full h-full flex-grow bg-white dark:bg-slate-800 rounded-lg p-6 border-2 border-slate-300 dark:border-slate-700 overflow-y-auto preview-content"></div>
+        <div class="md-pane">
+            <span class="md-pane-label">Live Preview</span>
+            <div id="preview" class="preview-content" aria-live="polite"></div>
         </div>
     </main>
 
@@ -268,133 +188,22 @@ Check out the [marked.js](https://marked.js.org/) library, which powers this pre
         editor.addEventListener('input', updatePreview);
         editor.value = initialMarkdown;
         updatePreview();
-        
-        // Theme Toggle Logic
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const sunIcon = document.getElementById('theme-toggle-sun-icon');
-        const moonIcon = document.getElementById('theme-toggle-moon-icon');
-
-        const updateIcons = () => {
-            if (document.documentElement.classList.contains('dark')) {
-                sunIcon.classList.remove('hidden');
-                moonIcon.classList.add('hidden');
-            } else {
-                sunIcon.classList.add('hidden');
-                moonIcon.classList.remove('hidden');
-            }
-        };
-
-        themeToggleBtn.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
-            if (document.documentElement.classList.contains('dark')) {
-                localStorage.theme = 'dark';
-            } else {
-                localStorage.theme = 'light';
-            }
-            updateIcons();
-        });
-
-        updateIcons();
     </script>
     
-    <!-- Floating Hub Button Snippet -->
-    <a href="https://tools.muhammadhassaanjaved.com/" id="hub-bubble" title="View All Tools" target="_blank" rel="noopener noreferrer">
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="https://tools.muhammadhassaanjaved.com/" id="hub-bubble" class="crusher-tool-fab" title="View All Tools" target="_blank" rel="noopener noreferrer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="3" width="7" height="7"></rect>
             <rect x="14" y="3" width="7" height="7"></rect>
             <rect x="14" y="14" width="7" height="7"></rect>
             <rect x="3" y="14" width="7" height="7"></rect>
         </svg>
     </a>
-    <!-- End of Snippet -->
-    <crusher-style-switcher default-theme="minimal" hide-themes hide-theme-color></crusher-style-switcher>
-    <script id="crusher-minimal-mode-lock">
-      (() => {
-        const root = document.documentElement;
-        const CONTRACT_VERSION = 'style-switcher-v3';
-        const DEFAULT_BRAND = '#0ea5e9';
-        const SWITCHER_COLORS = {
-          sky: '#0ea5e9',
-          emerald: '#10b981',
-          violet: '#8b5cf6',
-          orange: '#f97316',
-          pink: '#ec4899'
-        };
-        const readPrefs = () => {
-          try { return JSON.parse(localStorage.getItem('crusher_prefs') || '{}'); } catch { return {}; }
-        };
-        const writePrefs = (prefs) => {
-          try { localStorage.setItem('crusher_prefs', JSON.stringify(prefs)); } catch {}
-        };
-        const normalizeMode = (mode) => mode === 'dark' ? 'dark' : 'light';
-        const ensurePrefs = (forcedMode) => {
-          const prefs = readPrefs();
-          const currentContract = (() => { try { return localStorage.getItem('crusher_tools_mode_contract'); } catch { return ''; } })();
-          if (currentContract !== CONTRACT_VERSION) {
-            prefs.mode = 'light';
-            try { localStorage.setItem('crusher_tools_mode_contract', CONTRACT_VERSION); } catch {}
-          } else if (forcedMode === 'dark' || forcedMode === 'light') {
-            prefs.mode = forcedMode;
-          } else {
-            prefs.mode = normalizeMode(prefs.mode);
-          }
-          prefs.theme = 'minimal';
-          if (!prefs.brand) prefs.brand = DEFAULT_BRAND;
-          try { localStorage.theme = prefs.mode; } catch {}
-          writePrefs(prefs);
-          return prefs;
-        };
-        const sync = (forcedMode) => {
-          const prefs = ensurePrefs(forcedMode);
-          root.setAttribute('data-theme', 'minimal');
-          root.setAttribute('data-theme-lock', 'minimal');
-          root.setAttribute('data-mode', prefs.mode);
-          root.classList.toggle('dark', prefs.mode === 'dark');
-          root.style.setProperty('--crusher-color-brand-primary', prefs.brand || DEFAULT_BRAND);
-        };
-        const patchSwitcher = async () => {
-          await customElements.whenDefined('crusher-style-switcher');
-          const switcher = document.querySelector('crusher-style-switcher');
-          if (!switcher) return;
-          switcher.hideThemes = true;
-          switcher.hideThemeColor = true;
-          switcher.colors = SWITCHER_COLORS;
-          switcher._cacheSwatchColors?.();
-          switcher.requestUpdate?.();
-          await switcher.updateComplete?.catch?.(() => {});
-          const applyShadowFixes = () => {
-            const shadow = switcher.shadowRoot;
-            if (!shadow) return;
-            shadow.querySelectorAll('button').forEach((button) => { button.style.cursor = 'pointer'; });
-            shadow.querySelectorAll('.colors').forEach((row) => {
-              row.style.flexWrap = 'nowrap';
-              row.style.justifyContent = 'flex-start';
-              row.style.gap = '0.45rem';
-            });
-            shadow.querySelectorAll('.swatch').forEach((swatch) => {
-              swatch.style.inlineSize = '1.65rem';
-              swatch.style.blockSize = '1.65rem';
-              swatch.style.flex = '0 0 auto';
-              swatch.style.cursor = 'pointer';
-            });
-          };
-          applyShadowFixes();
-          const originalRequestUpdate = switcher.requestUpdate?.bind(switcher);
-          if (originalRequestUpdate && !switcher.__crusherToolsPatched) {
-            switcher.__crusherToolsPatched = true;
-            switcher.requestUpdate = (...args) => {
-              const result = originalRequestUpdate(...args);
-              requestAnimationFrame(applyShadowFixes);
-              return result;
-            };
-          }
-        };
-        sync();
-        window.addEventListener('crusher:themechange', (event) => sync(event.detail?.mode));
-        document.getElementById('theme-toggle')?.addEventListener('click', () => requestAnimationFrame(() => sync()));
-        patchSwitcher();
-      })();
-    </script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.3/dist/crusher-ui.standalone.esm.js"></script>
+
+    <crusher-style-switcher
+      default-theme="minimal"
+      default-brand="#0ea5e9"
+      hide-themes
+      hide-theme-color></crusher-style-switcher>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/crusher-ui-kit@0.1.6/dist/crusher-ui.standalone.esm.js"></script>
 </body>
 </html>
